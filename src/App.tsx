@@ -7,7 +7,6 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  useRef,
 } from "react";
 import { isEqual, shuffle } from "lodash";
 
@@ -20,8 +19,8 @@ type Direction =
   | "down"
   | "left"
   | "right"
-  | "start-overlay"
-  | "end-overlay";
+  | "end-overlay"
+  | "increment-completed-transition";
 type Translation = [number, number];
 enum AnimationState {
   SETTLED,
@@ -33,6 +32,7 @@ type GameState = {
   previousGrid: Grid;
   translations: Translation[];
   animationState: AnimationState;
+  completedTranslations: number;
 };
 
 function createEmptyGrid(rows: number, columns: number): number[][] {
@@ -85,11 +85,21 @@ function findNextPopulatedCellIndex(row: Cell[], start: number): number {
   return start + 1 + nextPopulatedCellI;
 }
 
-function moveLeft(grid: Grid): [Grid, Translation[]] {
-  const columns = grid[0].length;
+type Transformation = (grid: Grid) => Grid;
+
+function transformAccumulator(grid: Grid, transform: Transformation): Grid {
+  return transform(grid);
+}
+
+function moveLeft(
+  grid: Grid,
+  transformations: Transformation[]
+): [Grid, Translation[]] {
+  const transformed = transformations.reduce(transformAccumulator, grid);
+  const columns = getColumns(transformed);
   const translations: Translation[] = [];
 
-  const moved = grid.map((row, rowI) => {
+  const moved = transformed.map((row, rowI) => {
     const mutableRow = row.slice();
 
     for (let i = 0; i < row.length; i++) {
@@ -132,7 +142,26 @@ function moveLeft(grid: Grid): [Grid, Translation[]] {
     return mutableRow;
   });
 
-  return [moved, translations];
+  const reverseTransforms = transformations
+    .slice()
+    .reverse()
+    .reduce(transformAccumulator, moved);
+
+  const transformedIndices = transformations
+    .reduce(
+      transformAccumulator,
+      createIndexGrid(getRows(transformed), getColumns(transformed))
+    )
+    .flat() as number[];
+
+  const mappedTranslations = translations.map(
+    ([from, to]): Translation => [
+      transformedIndices[from],
+      transformedIndices[to],
+    ]
+  );
+
+  return [reverseTransforms, mappedTranslations];
 }
 
 /**
@@ -170,6 +199,10 @@ function transpose<T>(grid: T[][]): T[][] {
     );
 }
 
+function identity<T>(grid: T[][]): T[][] {
+  return grid;
+}
+
 function getRows(grid: Grid): number {
   return grid.length;
 }
@@ -181,43 +214,43 @@ function getColumns(grid: Grid): number {
 function move(grid: Grid, direction: Direction): [Grid, Translation[]] {
   switch (direction) {
     case "left":
-      return moveLeft(grid);
+      return moveLeft(grid, [identity]);
     case "right":
-      const [moved, translations] = moveLeft(flipHorizontal(grid));
-      const transformedIndices = flipHorizontal(
-        createIndexGrid(getRows(grid), getColumns(grid))
-      ).flat();
-
-      return [
-        moved,
-        translations.map(
-          ([from, to]): Translation => [
-            transformedIndices[from],
-            transformedIndices[to],
-          ]
-        ),
-      ];
+      return moveLeft(grid, [flipHorizontal]);
+    case "up":
+      return moveLeft(grid, [transpose]);
+    case "down":
+      return moveLeft(grid, [transpose, flipHorizontal]);
     default:
       return [grid, []];
-    // case "up":
-    //   return transpose(moveLeft(transpose(grid)));
-    // case "down":
-    //   return transpose(
-    //     flipHorizontal(moveLeft(flipHorizontal(transpose(grid))))
-    //   );
   }
 }
 
 function gameReducer(state: GameState, action: Direction): GameState {
   switch (action) {
-    case "start-overlay":
+    case "increment-completed-transition":
+      if (state.animationState !== AnimationState.MOVING) {
+        console.log("fuck");
+        break;
+      }
+      if (state.completedTranslations + 1 === state.translations.length) {
+        return {
+          ...state,
+          completedTranslations: 0,
+          animationState: AnimationState.OVERLAYING,
+        };
+      }
+
       return {
         ...state,
-        animationState: AnimationState.OVERLAYING,
+        completedTranslations: state.completedTranslations + 1,
       };
+
     case "end-overlay":
       return {
         ...state,
+        completedTranslations: 0,
+        translations: [],
         previousGrid: state.grid,
         animationState: AnimationState.SETTLED,
       };
@@ -235,6 +268,7 @@ function gameReducer(state: GameState, action: Direction): GameState {
     grid: insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI),
     translations,
     animationState: AnimationState.MOVING,
+    completedTranslations: 0,
   };
 }
 
@@ -278,10 +312,11 @@ function initGameState([rows, columns, obstacles]: [
     translations: [],
     previousGrid: grid,
     animationState: AnimationState.SETTLED,
+    completedTranslations: 0,
   };
 }
 
-const defaultGameArgs: [number, number, number] = [6, 6, 0];
+const defaultGameArgs: [number, number, number] = [6, 6, 4];
 
 //https://www.learnui.design/tools/data-color-picker.html#divergent
 const colorArray = [
@@ -319,11 +354,14 @@ function mapTranslationsToTransforms(
       const [from, to] = t;
       const diff = to - from;
 
-      const axis = Math.abs(diff) > columns ? "Y" : "X";
+      const axis = Math.abs(diff) >= columns ? "Y" : "X";
+      const moveBy = axis === "Y" ? diff / columns : diff;
+
+      console.log(axis, moveBy, diff);
 
       return {
-        transform: `translate${axis}(${diff * 64}px)`,
-        transition: `transform ${Math.abs(diff) * 0.04}s ease`,
+        transform: `translate${axis}(${moveBy * 64}px)`,
+        transition: `transform ${Math.abs(moveBy) * 0.04}s ease`,
       };
     });
 }
@@ -382,10 +420,14 @@ function GridView({
 function App() {
   const [{ grid, translations, previousGrid, animationState }, dispatch] =
     useReducer(gameReducer, defaultGameArgs, initGameState);
-  const transforms = mapTranslationsToTransforms(
-    defaultGameArgs[0],
-    defaultGameArgs[1],
-    translations
+  const transforms = useMemo(
+    () =>
+      mapTranslationsToTransforms(
+        defaultGameArgs[0],
+        defaultGameArgs[1],
+        translations
+      ),
+    [translations]
   );
 
   useEffect(() => {
@@ -407,26 +449,22 @@ function App() {
     return () => {
       document.removeEventListener("keydown", keydownHandler);
     };
+  }, [animationState]);
+
+  const transitionEndHandler = useCallback(() => {
+    dispatch("increment-completed-transition");
   }, []);
 
   const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
-
-  const completedTranslations = useRef(0);
-  const transitionEndHandler = useCallback(() => {
-    completedTranslations.current++;
-    if (completedTranslations.current === translations.length) {
-      dispatch("start-overlay");
-      completedTranslations.current = 0;
-    }
-  }, [completedTranslations, translations.length]);
-
+  console.log(animationState);
   return (
     <div className="game">
       <div className="grid-container">
         <GridView
-          grid={previousGrid ?? grid}
+          grid={previousGrid}
           transforms={transforms}
           onTransitionEnd={transitionEndHandler}
+          key={(animationState === AnimationState.OVERLAYING).toString()}
         />
         {animationState === AnimationState.OVERLAYING && (
           <GridView
@@ -435,6 +473,7 @@ function App() {
             onAnimationEnd={() => {
               dispatch("end-overlay");
             }}
+            key="overlay"
           />
         )}
       </div>
