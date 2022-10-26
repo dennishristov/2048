@@ -1,17 +1,54 @@
 import "./App.css";
-import { useEffect, useMemo, useReducer } from "react";
+import {
+  AnimationEventHandler,
+  CSSProperties,
+  TransitionEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 import { isEqual, shuffle } from "lodash";
 
 const OBSTACLE = "OBSTACLE";
 type Cell = number | typeof OBSTACLE;
 type Grid = Cell[][];
 const MIN_CELL_VALUE = 2;
-type Direction = "up" | "down" | "left" | "right";
+type Direction =
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "start-overlay"
+  | "end-overlay";
+type Translation = [number, number];
+enum AnimationState {
+  SETTLED,
+  MOVING,
+  OVERLAYING,
+}
+type GameState = {
+  grid: Grid;
+  previousGrid: Grid;
+  translations: Translation[];
+  animationState: AnimationState;
+};
 
-function createEmptyGrid(rows: number, columns: number): Grid {
+function createEmptyGrid(rows: number, columns: number): number[][] {
   return Array(rows)
     .fill(0)
     .map(() => Array(columns).fill(0));
+}
+
+function createIndexGrid(rows: number, columns: number): number[][] {
+  return Array(rows)
+    .fill(0)
+    .map((_, ri) =>
+      Array(columns)
+        .fill(0)
+        .map((_, ci) => rows * ri + ci)
+    );
 }
 
 function findRandomEmptyCellIndex(grid: Grid): number {
@@ -48,8 +85,11 @@ function findNextPopulatedCellIndex(row: Cell[], start: number): number {
   return start + 1 + nextPopulatedCellI;
 }
 
-function moveLeft(grid: Grid): Grid {
-  return grid.map((row) => {
+function moveLeft(grid: Grid): [Grid, Translation[]] {
+  const columns = grid[0].length;
+  const translations: Translation[] = [];
+
+  const moved = grid.map((row, rowI) => {
     const mutableRow = row.slice();
 
     for (let i = 0; i < row.length; i++) {
@@ -66,6 +106,10 @@ function moveLeft(grid: Grid): Grid {
 
         mutableRow[i] = mutableRow[nextPopulatedCellI];
         mutableRow[nextPopulatedCellI] = 0;
+
+        const from = nextPopulatedCellI + rowI * columns;
+        const to = i + rowI * columns;
+        translations.push([from, to]);
       }
 
       const nextPopulatedCellI = findNextPopulatedCellIndex(mutableRow, i);
@@ -75,14 +119,20 @@ function moveLeft(grid: Grid): Grid {
 
       // Sum if there is the a cell with the same value ahead
       if (mutableRow[i] === mutableRow[nextPopulatedCellI]) {
-        //@ts-ignore, we checked for obstacle already
+        //@ts-ignore, we checked for an obstacle already
         mutableRow[i] *= 2;
         mutableRow[nextPopulatedCellI] = 0;
+
+        const from = nextPopulatedCellI + rowI * columns;
+        const to = i + rowI * columns;
+        translations.push([from, to]);
       }
     }
 
     return mutableRow;
   });
+
+  return [moved, translations];
 }
 
 /**
@@ -94,7 +144,7 @@ function moveLeft(grid: Grid): Grid {
  * [8, 0, 0]
  * [0, 0, 0]
  */
-function flipHorizontal(grid: Grid): Grid {
+function flipHorizontal<T>(grid: T[][]): T[][] {
   return grid.map((row) => row.slice().reverse());
 }
 
@@ -107,7 +157,7 @@ function flipHorizontal(grid: Grid): Grid {
  * [2, 0, 0]
  * [4, 8, 0]
  */
-function transpose(grid: Grid): Grid {
+function transpose<T>(grid: T[][]): T[][] {
   const columns = grid[0].length;
   const rows = grid.length;
 
@@ -120,33 +170,79 @@ function transpose(grid: Grid): Grid {
     );
 }
 
-function move(grid: Grid, direction: Direction): Grid {
+function getRows(grid: Grid): number {
+  return grid.length;
+}
+
+function getColumns(grid: Grid): number {
+  return grid[0].length;
+}
+
+function move(grid: Grid, direction: Direction): [Grid, Translation[]] {
   switch (direction) {
     case "left":
       return moveLeft(grid);
     case "right":
-      return flipHorizontal(moveLeft(flipHorizontal(grid)));
-    case "up":
-      return transpose(moveLeft(transpose(grid)));
-    case "down":
-      return transpose(
-        flipHorizontal(moveLeft(flipHorizontal(transpose(grid))))
-      );
+      const [moved, translations] = moveLeft(flipHorizontal(grid));
+      const transformedIndices = flipHorizontal(
+        createIndexGrid(getRows(grid), getColumns(grid))
+      ).flat();
+
+      return [
+        moved,
+        translations.map(
+          ([from, to]): Translation => [
+            transformedIndices[from],
+            transformedIndices[to],
+          ]
+        ),
+      ];
+    default:
+      return [grid, []];
+    // case "up":
+    //   return transpose(moveLeft(transpose(grid)));
+    // case "down":
+    //   return transpose(
+    //     flipHorizontal(moveLeft(flipHorizontal(transpose(grid))))
+    //   );
   }
 }
 
-function gameReducer(grid: Grid, direction: Direction): Grid {
-  const moved = move(grid, direction);
+function gameReducer(state: GameState, action: Direction): GameState {
+  switch (action) {
+    case "start-overlay":
+      return {
+        ...state,
+        animationState: AnimationState.OVERLAYING,
+      };
+    case "end-overlay":
+      return {
+        ...state,
+        previousGrid: state.grid,
+        animationState: AnimationState.SETTLED,
+      };
+  }
+  const [moved, translations] = move(state.grid, action);
 
-  if (isEqual(moved, grid)) {
-    return grid;
+  if (isEqual(moved, state.grid)) {
+    return state;
   }
 
   const newEntryI = findRandomEmptyCellIndex(moved);
-  return insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
+
+  return {
+    previousGrid: state.grid,
+    grid: insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI),
+    translations,
+    animationState: AnimationState.MOVING,
+  };
 }
 
-function initGrid([rows, columns, obstacles]: [number, number, number]): Grid {
+function initGameState([rows, columns, obstacles]: [
+  number,
+  number,
+  number
+]): GameState {
   // some interesting corner cases
   // return [
   // [0, OBSTACLE, 2, 0, 0, 0],
@@ -157,20 +253,35 @@ function initGrid([rows, columns, obstacles]: [number, number, number]): Grid {
   // [0, 2, 2, 2, 4],
   // [2, 2, 2, 2, 4],
   // ];
-  const grid = createEmptyGrid(rows, columns);
+  // return [
+  //   [
+  //     [0, 0, 2],
+  //     [0, 0, 2],
+  //     [0, 0, 2],
+  //   ],
+  //   [],
+  // ];
+  const empty = createEmptyGrid(rows, columns);
   const withObstacles = Array(obstacles)
     .fill(0)
     .reduce(
       (result) =>
         insertValueAtIndex(result, OBSTACLE, findRandomEmptyCellIndex(result)),
-      grid
+      empty
     );
   const starter = findRandomEmptyCellIndex(withObstacles);
 
-  return insertValueAtIndex(withObstacles, MIN_CELL_VALUE, starter);
+  const grid = insertValueAtIndex(withObstacles, MIN_CELL_VALUE, starter);
+
+  return {
+    grid,
+    translations: [],
+    previousGrid: grid,
+    animationState: AnimationState.SETTLED,
+  };
 }
 
-const defaultGameArgs: [number, number, number] = [6, 6, 3];
+const defaultGameArgs: [number, number, number] = [6, 6, 0];
 
 //https://www.learnui.design/tools/data-color-picker.html#divergent
 const colorArray = [
@@ -191,8 +302,91 @@ function log2(value: number): number {
   return Math.log(value) / Math.log(2);
 }
 
+function mapTranslationsToTransforms(
+  rows: number,
+  columns: number,
+  translations: Translation[]
+): Partial<CSSProperties>[] {
+  return Array(rows * columns)
+    .fill(0)
+    .map((_, i): Partial<CSSProperties> => {
+      const t = translations.find(([from]) => from === i);
+
+      if (!t) {
+        return {};
+      }
+
+      const [from, to] = t;
+      const diff = to - from;
+
+      const axis = Math.abs(diff) > columns ? "Y" : "X";
+
+      return {
+        transform: `translate${axis}(${diff * 64}px)`,
+        transition: `transform ${Math.abs(diff) * 0.04}s ease`,
+      };
+    });
+}
+
+function getCellColor(cell: Cell): string {
+  if (cell === OBSTACLE) {
+    return "brown";
+  }
+
+  if (cell === 0) {
+    return "transparent";
+  }
+
+  return colorArray[log2(cell) - 1];
+}
+
+function GridView({
+  grid,
+  transforms,
+  className = "",
+  onTransitionEnd,
+  onAnimationEnd,
+}: {
+  className?: string;
+  grid: Grid;
+  transforms?: Partial<CSSProperties>[];
+  onTransitionEnd?: TransitionEventHandler;
+  onAnimationEnd?: AnimationEventHandler;
+}): JSX.Element {
+  return (
+    <div
+      className={`grid ${className}`}
+      onTransitionEnd={onTransitionEnd}
+      onAnimationEnd={onAnimationEnd}
+    >
+      {grid.map((row, ri) => (
+        <div className="row" key={ri}>
+          {row.map((c, ci) => (
+            <span
+              className="cell"
+              key={ci}
+              style={{
+                backgroundColor: getCellColor(c),
+                ...transforms?.[ri * row.length + ci],
+              }}
+            >
+              {c || null}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function App() {
-  const [grid, dispatch] = useReducer(gameReducer, defaultGameArgs, initGrid);
+  const [{ grid, translations, previousGrid, animationState }, dispatch] =
+    useReducer(gameReducer, defaultGameArgs, initGameState);
+  const transforms = mapTranslationsToTransforms(
+    defaultGameArgs[0],
+    defaultGameArgs[1],
+    translations
+  );
 
   useEffect(() => {
     const keyToDirectionMap = {
@@ -217,24 +411,33 @@ function App() {
 
   const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
 
+  const completedTranslations = useRef(0);
+  const transitionEndHandler = useCallback(() => {
+    completedTranslations.current++;
+    if (completedTranslations.current === translations.length) {
+      dispatch("start-overlay");
+      completedTranslations.current = 0;
+    }
+  }, [completedTranslations, translations.length]);
+
   return (
-    <div className="grid">
-      {grid.map((row, ri) => (
-        <div className="row" key={ri}>
-          {row.map((c, ci) => (
-            <span
-              className="cell"
-              key={ci}
-              style={{
-                backgroundColor:
-                  colorArray[log2(typeof c === "number" ? c : 1) - 1],
-              }}
-            >
-              {c}
-            </span>
-          ))}
-        </div>
-      ))}
+    <div className="game">
+      <div className="grid-container">
+        <GridView
+          grid={previousGrid ?? grid}
+          transforms={transforms}
+          onTransitionEnd={transitionEndHandler}
+        />
+        {animationState === AnimationState.OVERLAYING && (
+          <GridView
+            grid={grid}
+            className={`grid-overlay`}
+            onAnimationEnd={() => {
+              dispatch("end-overlay");
+            }}
+          />
+        )}
+      </div>
       {hasWon && <div>Congratulations, you won!</div>}
     </div>
   );

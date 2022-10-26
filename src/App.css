@@ -1,6 +1,17 @@
+.game {
+  display: flex;
+}
+
+.grid-container {
+  position: relative;
+  background-color: gainsboro;
+  display: flex;
+}
+
 .grid {
   display: flex;
   flex-direction: column;
+  background-color: transparent;
 }
 
 .row {
@@ -15,4 +26,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: translateX(0), translateY(0);
+  transition: transform 0.04s ease;
+  will-change: transform;
+}
+
+.grid-overlay {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: opacity;
+  opacity: 0;
+  animation: 0.1s ease fade-in forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
