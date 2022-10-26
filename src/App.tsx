@@ -1,23 +1,11 @@
-import logo from "./logo.svg";
 import "./App.css";
-import { useEffect, useReducer } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 import { isEqual, shuffle } from "lodash";
 
-/**
- * [
- *  [0, 0, 0, 0, 0, 0],
- *  [0, 0, 0, 0, 0, 0],
- *  [0, 0, 0, 0, 0, 0],
- *  [0, 0, 0, 0, 0, 0],
- *  [0, 0, 0, 0, 0, 0],
- *  [0, 0, 0, 0, 0, 0],
- * ]
- */
 const OBSTACLE = "OBSTACLE";
-type Cell = number;
+type Cell = number | typeof OBSTACLE;
 type Grid = Cell[][];
 const MIN_CELL_VALUE = 2;
-
 type Direction = "up" | "down" | "left" | "right";
 
 function createEmptyGrid(rows: number, columns: number): Grid {
@@ -35,52 +23,65 @@ function findRandomEmptyCellIndex(grid: Grid): number {
   return i;
 }
 
-function insertValueAtIndex(grid: Grid, value: number, i: number): Grid {
+function insertValueAtIndex(grid: Grid, value: Cell, i: number): Grid {
   return grid.map((row, rowI) =>
     row.map((cell, cellI) => (rowI * row.length + cellI === i ? value : cell))
   );
 }
 
 function findNextPopulatedCellIndex(row: Cell[], start: number): number {
-  const nextPopulatedCellI = row
+  const nextObstacleIndex = row
     .slice(start + 1, row.length)
+    .findIndex((x) => x === OBSTACLE);
+
+  const boundaryIndex =
+    nextObstacleIndex === -1 ? row.length : start + 1 + nextObstacleIndex;
+
+  const nextPopulatedCellI = row
+    .slice(start + 1, boundaryIndex)
     .findIndex((x) => x > 0);
 
   if (nextPopulatedCellI === -1) {
     return -1;
   }
 
-  return start + nextPopulatedCellI + 1;
+  return start + 1 + nextPopulatedCellI;
 }
 
 function moveLeft(grid: Grid): Grid {
   return grid.map((row) => {
-    const slice = row.slice();
+    const mutableRow = row.slice();
 
     for (let i = 0; i < row.length; i++) {
-      if (slice[i] === 0) {
-        const nextPopulatedCellI = findNextPopulatedCellIndex(slice, i);
+      if (mutableRow[i] === OBSTACLE) {
+        continue;
+      }
 
+      // Move next positive value to the left most side of the row
+      if (mutableRow[i] === 0) {
+        const nextPopulatedCellI = findNextPopulatedCellIndex(mutableRow, i);
         if (nextPopulatedCellI === -1) {
           continue;
         }
 
-        slice[i] = slice[nextPopulatedCellI];
-        slice[nextPopulatedCellI] = 0;
+        mutableRow[i] = mutableRow[nextPopulatedCellI];
+        mutableRow[nextPopulatedCellI] = 0;
       }
-      const nextPopulatedCellI = findNextPopulatedCellIndex(slice, i);
 
+      const nextPopulatedCellI = findNextPopulatedCellIndex(mutableRow, i);
       if (nextPopulatedCellI === -1) {
         continue;
       }
 
-      if (slice[i] === slice[nextPopulatedCellI]) {
-        slice[i] *= 2;
-        slice[nextPopulatedCellI] = 0;
+      // Sum if there is the a cell with the same value ahead
+      if (mutableRow[i] === mutableRow[nextPopulatedCellI]) {
+        //@ts-ignore, we checked for obstacle already
+        mutableRow[i] *= 2;
+        mutableRow[nextPopulatedCellI] = 0;
       }
     }
 
-    return slice;
+    return mutableRow;
   });
 }
 
@@ -128,9 +129,6 @@ function move(grid: Grid, direction: Direction): Grid {
     case "up":
       return transpose(moveLeft(transpose(grid)));
     case "down":
-      // return transpose(
-      //   flipHorizontal(moveLeft(transpose(flipHorizontal(grid))))
-      // );
       return transpose(
         flipHorizontal(moveLeft(flipHorizontal(transpose(grid))))
       );
@@ -138,46 +136,63 @@ function move(grid: Grid, direction: Direction): Grid {
 }
 
 function gameReducer(grid: Grid, direction: Direction): Grid {
-  const moved: Grid = move(grid, direction);
+  const moved = move(grid, direction);
 
-  if (!isEqual(moved, grid)) {
-    const newEntryI = findRandomEmptyCellIndex(moved);
-    return insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
+  if (isEqual(moved, grid)) {
+    return grid;
   }
 
-  return grid;
+  const newEntryI = findRandomEmptyCellIndex(moved);
+  return insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
 }
 
-function initGrid([rows, columns]: [number, number]): Grid {
+function initGrid([rows, columns, obstacles]: [number, number, number]): Grid {
   // some interesting corner cases
   // return [
-  //   [0, 2, 0, 2, 4],
-  //   [0, 2, 2, 2, 4],
-  //   [2, 2, 2, 2, 4],
+  // [0, OBSTACLE, 2, 0, 0, 0],
+  // [0, 0, 0, 2, OBSTACLE, 0],
+  // [0, 2, 0, 2, 4],
+  // [0, OBSTACLE, 2, 2, 4],
+  // [2, OBSTACLE, 2, 2, 4],
+  // [0, 2, 2, 2, 4],
+  // [2, 2, 2, 2, 4],
   // ];
   const grid = createEmptyGrid(rows, columns);
-  const starter = findRandomEmptyCellIndex(grid);
+  const withObstacles = Array(obstacles)
+    .fill(0)
+    .reduce(
+      (result) =>
+        insertValueAtIndex(result, OBSTACLE, findRandomEmptyCellIndex(result)),
+      grid
+    );
+  const starter = findRandomEmptyCellIndex(withObstacles);
 
-  return insertValueAtIndex(grid, MIN_CELL_VALUE, starter);
+  return insertValueAtIndex(withObstacles, MIN_CELL_VALUE, starter);
 }
 
-const hello: [number, number] = [6, 6];
+const defaultGameArgs: [number, number, number] = [6, 6, 3];
 
+//https://www.learnui.design/tools/data-color-picker.html#divergent
 const colorArray = [
-  "red",
-  "green",
-  "blue",
-  "orange",
-  "yellow",
-  "white",
-].reverse();
+  "#554994",
+  "#7d66a7",
+  "#a186bb",
+  "#c3a9d0",
+  "#e2cde6",
+  "#fff2ff",
+  "#ffe9f7",
+  "#ffe0ea",
+  "#ffd8da",
+  "#ffd1c7",
+  "#ffccb3",
+];
 
 function log2(value: number): number {
   return Math.log(value) / Math.log(2);
 }
 
 function App() {
-  const [grid, dispatch] = useReducer(gameReducer, hello, initGrid);
+  const [grid, dispatch] = useReducer(gameReducer, defaultGameArgs, initGrid);
 
   useEffect(() => {
     const keyToDirectionMap = {
@@ -200,6 +215,8 @@ function App() {
     };
   }, []);
 
+  const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
+
   return (
     <div className="grid">
       {grid.map((row, ri) => (
@@ -208,13 +225,17 @@ function App() {
             <span
               className="cell"
               key={ci}
-              style={{ backgroundColor: colorArray[log2(c)] }}
+              style={{
+                backgroundColor:
+                  colorArray[log2(typeof c === "number" ? c : 1) - 1],
+              }}
             >
               {c}
             </span>
           ))}
         </div>
       ))}
+      {hasWon && <div>Congratulations, you won!</div>}
     </div>
   );
 }
