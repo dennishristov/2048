@@ -1,6 +1,6 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import { isEqual, shuffle } from "lodash";
 
 /**
@@ -58,15 +58,20 @@ function moveLeft(grid: Grid): Grid {
     const slice = row.slice();
 
     for (let i = 0; i < row.length; i++) {
+      if (slice[i] === 0) {
+        const nextPopulatedCellI = findNextPopulatedCellIndex(slice, i);
+
+        if (nextPopulatedCellI === -1) {
+          continue;
+        }
+
+        slice[i] = slice[nextPopulatedCellI];
+        slice[nextPopulatedCellI] = 0;
+      }
       const nextPopulatedCellI = findNextPopulatedCellIndex(slice, i);
 
       if (nextPopulatedCellI === -1) {
         continue;
-      }
-
-      if (slice[i] === 0) {
-        slice[i] = slice[nextPopulatedCellI];
-        slice[nextPopulatedCellI] = 0;
       }
 
       if (slice[i] === slice[nextPopulatedCellI]) {
@@ -144,6 +149,12 @@ function gameReducer(grid: Grid, direction: Direction): Grid {
 }
 
 function initGrid([rows, columns]: [number, number]): Grid {
+  // some interesting corner cases
+  // return [
+  //   [0, 2, 0, 2, 4],
+  //   [0, 2, 2, 2, 4],
+  //   [2, 2, 2, 2, 4],
+  // ];
   const grid = createEmptyGrid(rows, columns);
   const starter = findRandomEmptyCellIndex(grid);
 
@@ -168,6 +179,27 @@ function log2(value: number): number {
 function App() {
   const [grid, dispatch] = useReducer(gameReducer, hello, initGrid);
 
+  useEffect(() => {
+    const keyToDirectionMap = {
+      ArrowUp: "up",
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+    } as const;
+
+    const keydownHandler = ({ key }: KeyboardEvent) => {
+      if (key in keyToDirectionMap) {
+        dispatch(keyToDirectionMap[key as keyof typeof keyToDirectionMap]);
+      }
+    };
+
+    document.addEventListener("keydown", keydownHandler);
+
+    return () => {
+      document.removeEventListener("keydown", keydownHandler);
+    };
+  }, []);
+
   return (
     <div className="grid">
       {grid.map((row, ri) => (
@@ -183,10 +215,6 @@ function App() {
           ))}
         </div>
       ))}
-      <button onClick={() => dispatch("left")}>Left</button>
-      <button onClick={() => dispatch("right")}>Right</button>
-      <button onClick={() => dispatch("up")}>Up</button>
-      <button onClick={() => dispatch("down")}>Down</button>
     </div>
   );
 }
