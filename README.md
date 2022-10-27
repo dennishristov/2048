@@ -38,6 +38,6 @@ We can describe the state of the game in regard to animating the cells by having
 - `MOVING`: applying transitions for translates across X and Y for the moving cells
 - `OVERLAYING`: animating (opacity for) an overlay consisting of the next grid state
 
-<img width="1766" alt="image" src="https://user-images.githubusercontent.com/22468578/198354118-770a56bb-b520-45f8-90d7-4856c773b3a4.png">
+<img width="1766" alt="image" src="https://user-images.githubusercontent.com/22468578/198354482-679dad17-1fb2-4f85-ab82-7758ac9e9edb.png">
 
-> Note: There are some ocasional glitches which I spent too much time trying to debug and eventually gave up but with fast enough transition durations or not abusing the user input the game animates as expected.
+> Note: There are some ocasional glitches when abusing the user input which I spent too much time trying to debug and eventually gave up but with fast enough transition durations they are not noticable. Essentially this happens when the user tries inputing a new direction before waiting for the entire pipeline of stages to finish. I did conisder some solutions like throttling or doing a queue but they degraded the expirirence further. Perhaps a more clever plan for implementing the animation stages would accomodate user input abuse better. :) 
