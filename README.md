@@ -21,9 +21,9 @@ export type GameState = {
 Let's dig deeper into a couple of these:
 
 - `gird`: a matrix representing the values of the cells possible values are
-  -- 0: empty
-  -- > 0: a visible cell with a positive value
-  -- OBSTACLE: represents itself
+    - 0: empty
+    - \> 0: a visible cell with a positive value
+    - `OBSTACLE`: represents itself
 - the rest are implementation details for how we animate moving and placing the cells
 
 ## Game Mechanics
