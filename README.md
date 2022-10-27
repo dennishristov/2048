@@ -37,3 +37,7 @@ We can describe the state of the game in regard to animating the cells by having
 - `SETTLED`: the default one, nothing moving
 - `MOVING`: applying transitions for translates across X and Y for the moving cells
 - `OVERLAYING`: animating (opacity for) an overlay consisting of the next grid state
+
+<img width="1766" alt="image" src="https://user-images.githubusercontent.com/22468578/198354118-770a56bb-b520-45f8-90d7-4856c773b3a4.png">
+
+> Note: There are some ocasional glitches which I spent too much time trying to debug and eventually gave up but with fast enough transition durations or not abusing the user input the game animates as expected.
