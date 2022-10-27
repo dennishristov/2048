@@ -1,46 +1,39 @@
-# Getting Started with Create React App
+# 2048
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+There are a couple of things I find interesting about the solution that I would like to explain a bit.
 
-## Available Scripts
+## Game State
 
-In the project directory, you can run:
+The entire state of the game is stored in an object looking like:
 
-### `npm start`
+```
+export type GameState = {
+  grid: Grid;
+  previousGrid: Grid;
+  translations: Translation[];
+  animationState: AnimationState;
+  completedTranslations: number;
+};
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Let's dig deeper into a couple of these:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- `gird`: a matrix representing the values of the cells possible values are
+  -- 0: empty
+  -- > 0: a visible cell with a positive value
+  -- OBSTACLE: represents itself
+- the rest are implementation details for how we animate moving and placing the cells
 
-### `npm test`
+## Game Mechanics
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Implementing the algorithm that accommodates all directions is eased up by implementing one just for `LEFT`. Applying linear transformations on the `grid` matrix allows us to reuse the former algorithm for implementing the rest of the directions. One can inspect details on that [here](https://github.com/denishristov/2048/blob/ad3a15a6cebeec63edcafafa478d59c5b3c1c94d/src/GameMechanics.ts#L114)
 
-### `npm run build`
+> Note: I did get some inspiration for this by seeing [this fellow dev](https://github.com/gabrielecirulli/2048/blob/fc1ef4fe5a5fcccea7590f3e4c187c75980b353f/js/game_manager.js#L194) describing directions as vectors which reminded me of linear transformations for matrices. I would also like to thank 3Blue1Brown for his amazing videos on linear algebra (all of them are great, in fact), which built my intuition for coming up with the solution.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Animating the cells
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+We can describe the state of the game in regard to animating the cells by having these 3 states that go in a sequential loop:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `SETTLED`: the default one, nothing moving
+- `MOVING`: applying transitions for translates across X and Y for the moving cells
+- `OVERLAYING`: animating (opacity for) an overlay consisting of the next grid state
