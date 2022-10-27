@@ -1,17 +1,16 @@
-import "./App.css";
+import "./Game.css";
 
-import {
-  CSSProperties,
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-} from "react";
+import { CSSProperties, useEffect, useMemo, useReducer } from "react";
 import { gameReducer, initGameState } from "./GameMechanics";
-import { AnimationState, Translation } from "./GameMechanics.types";
+import {
+  AnimationState,
+  Direction,
+  GameReducerActionType,
+  Translation,
+} from "./GameMechanics.types";
 import { GridView } from "./GridView";
 
-const defaultGameArgs: [number, number, number] = [6, 6, 4];
+const defaultGameArgs: [number, number, number] = [6, 6, 0];
 
 function mapTranslationsToTransforms(
   rows: number,
@@ -33,11 +32,9 @@ function mapTranslationsToTransforms(
       const axis = Math.abs(diff) >= columns ? "Y" : "X";
       const moveBy = axis === "Y" ? diff / columns : diff;
 
-      // console.log(axis, moveBy, diff);
-
       return {
         transform: `translate${axis}(${moveBy * 64}px)`,
-        transition: `transform ${Math.abs(moveBy) * 0.04}s ease`,
+        transition: `transform ${0.2}s ease`,
       };
     });
 }
@@ -57,15 +54,18 @@ function Game() {
 
   useEffect(() => {
     const keyToDirectionMap = {
-      ArrowUp: "up",
-      ArrowDown: "down",
-      ArrowLeft: "left",
-      ArrowRight: "right",
+      ArrowUp: Direction.UP,
+      ArrowDown: Direction.DOWN,
+      ArrowLeft: Direction.LEFT,
+      ArrowRight: Direction.RIGHT,
     } as const;
 
     const keydownHandler = ({ key }: KeyboardEvent) => {
       if (key in keyToDirectionMap) {
-        dispatch(keyToDirectionMap[key as keyof typeof keyToDirectionMap]);
+        dispatch({
+          type: GameReducerActionType.MOVE,
+          direction: keyToDirectionMap[key as keyof typeof keyToDirectionMap],
+        });
       }
     };
 
@@ -76,12 +76,11 @@ function Game() {
     };
   }, [animationState]);
 
-  const transitionEndHandler = useCallback(() => {
-    dispatch("increment-completed-transition");
-  }, []);
+  const transitionEndHandler = () =>
+    dispatch({ type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION });
 
   const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
-  console.log(animationState);
+
   return (
     <div className="game">
       <div className="grid-container">
@@ -89,14 +88,14 @@ function Game() {
           grid={previousGrid}
           transforms={transforms}
           onTransitionEnd={transitionEndHandler}
-          key={(animationState === AnimationState.OVERLAYING).toString()}
+          key="grid"
         />
         {animationState === AnimationState.OVERLAYING && (
           <GridView
             grid={grid}
             className={`grid-overlay`}
             onAnimationEnd={() => {
-              dispatch("end-overlay");
+              dispatch({ type: GameReducerActionType.HIDE_OVERLAY });
             }}
             key="overlay"
           />

@@ -1,12 +1,29 @@
 import { Grid } from "./Grid.types";
 
-export type Direction =
-  | "up"
-  | "down"
-  | "left"
-  | "right"
-  | "end-overlay"
-  | "increment-completed-transition";
+export enum Direction {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+}
+
+export enum GameReducerActionType {
+  MOVE,
+  INCREMENT_COMPLETED_TRANSITION,
+  HIDE_OVERLAY,
+}
+
+export type GameReducerAction =
+  | {
+      type: GameReducerActionType.MOVE;
+      direction: Direction;
+    }
+  | {
+      type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION;
+    }
+  | {
+      type: GameReducerActionType.HIDE_OVERLAY;
+    };
 
 /**
  * translation from index to index

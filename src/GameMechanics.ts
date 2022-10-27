@@ -2,6 +2,8 @@ import { isEqual } from "lodash";
 import {
   AnimationState,
   Direction,
+  GameReducerAction,
+  GameReducerActionType,
   GameState,
   Transformation,
   Translation,
@@ -61,13 +63,29 @@ export function initGameState([rows, columns, obstacles]: [
   };
 }
 
-export function gameReducer(state: GameState, action: Direction): GameState {
-  switch (action) {
-    case "increment-completed-transition":
-      if (state.animationState !== AnimationState.MOVING) {
-        console.log("fuck");
-        break;
+export function gameReducer(
+  state: GameState,
+  action: GameReducerAction
+): GameState {
+  switch (action.type) {
+    case GameReducerActionType.MOVE:
+      const [moved, translations] = move(state.grid, action.direction);
+
+      if (isEqual(moved, state.grid)) {
+        return state;
       }
+
+      const newEntryI = findRandomEmptyCellIndex(moved);
+
+      return {
+        previousGrid: state.grid,
+        grid: insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI),
+        translations,
+        animationState: AnimationState.MOVING,
+        completedTranslations: 0,
+      };
+
+    case GameReducerActionType.INCREMENT_COMPLETED_TRANSITION:
       if (state.completedTranslations + 1 === state.translations.length) {
         return {
           ...state,
@@ -81,7 +99,7 @@ export function gameReducer(state: GameState, action: Direction): GameState {
         completedTranslations: state.completedTranslations + 1,
       };
 
-    case "end-overlay":
+    case GameReducerActionType.HIDE_OVERLAY:
       return {
         ...state,
         completedTranslations: 0,
@@ -90,35 +108,18 @@ export function gameReducer(state: GameState, action: Direction): GameState {
         animationState: AnimationState.SETTLED,
       };
   }
-  const [moved, translations] = move(state.grid, action);
-
-  if (isEqual(moved, state.grid)) {
-    return state;
-  }
-
-  const newEntryI = findRandomEmptyCellIndex(moved);
-
-  return {
-    previousGrid: state.grid,
-    grid: insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI),
-    translations,
-    animationState: AnimationState.MOVING,
-    completedTranslations: 0,
-  };
 }
 
 function move(grid: Grid, direction: Direction): [Grid, Translation[]] {
   switch (direction) {
-    case "left":
+    case Direction.LEFT:
       return moveLeft(grid, [identity]);
-    case "right":
+    case Direction.RIGHT:
       return moveLeft(grid, [flipHorizontal]);
-    case "up":
+    case Direction.UP:
       return moveLeft(grid, [transpose]);
-    case "down":
+    case Direction.DOWN:
       return moveLeft(grid, [transpose, flipHorizontal]);
-    default:
-      return [grid, []];
   }
 }
 
@@ -173,7 +174,7 @@ function moveLeft(
     return mutableRow;
   });
 
-  const reverseTransforms = transformations
+  const normalizedGrid = transformations
     .slice()
     .reverse()
     .reduce(transformAccumulator, moved);
@@ -185,14 +186,14 @@ function moveLeft(
     )
     .flat() as number[];
 
-  const mappedTranslations = translations.map(
+  const normalizedTranslations = translations.map(
     ([from, to]): Translation => [
       transformedIndices[from],
       transformedIndices[to],
     ]
   );
 
-  return [reverseTransforms, mappedTranslations];
+  return [normalizedGrid, normalizedTranslations];
 }
 
 function findNextPopulatedCellIndex(row: Cell[], start: number): number {

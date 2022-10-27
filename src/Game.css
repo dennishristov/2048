@@ -27,7 +27,7 @@
   align-items: center;
   justify-content: center;
   transform: translateX(0), translateY(0);
-  transition: transform 0.04s ease;
+  transition: transform 0s ease;
   will-change: transform;
 }
 
@@ -36,9 +36,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  will-change: opacity;
   opacity: 0;
-  animation: 0.1s ease fade-in forwards;
+  animation: 0.2s ease fade-in forwards;
 }
 
 @keyframes fade-in {
