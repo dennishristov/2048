@@ -1,6 +1,6 @@
 # 2048
 
-There are a couple of things I find interesting about the solution that I would like to explain a bit.
+There are a couple of things I find interesting about the solution that I would like to explain a bit. One can check out a deployed version [here](https://intense-everglades-29802.herokuapp.com).
 
 ## Game State
 
