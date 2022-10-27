@@ -2,6 +2,8 @@
 
 There are a couple of things I find interesting about the solution that I would like to explain a bit. One can check out a deployed version [here](https://intense-everglades-29802.herokuapp.com).
 
+> Note: Only keyboard input is supported, I would have loved to support swipes for mobiles but decided to stop before that.
+
 ## Game State
 
 The entire state of the game is stored in an object looking like:
