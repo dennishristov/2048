@@ -8,6 +8,7 @@ body {
 
 .game {
   display: flex;
+  flex-direction: column;
 }
 
 .grid-container {
@@ -52,6 +53,19 @@ body {
   left: 2px;
   opacity: 0;
   animation: 0.08s ease fade-in forwards;
+}
+
+.game-params {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.input {
+  display: flex;
+  flex-direction: column;
+  width: 25%;
 }
 
 @keyframes fade-in {

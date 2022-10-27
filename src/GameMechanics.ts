@@ -77,7 +77,6 @@ export function gameReducer(
 
       const newEntryI = findRandomEmptyCellIndex(moved);
       const grid = insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
-      console.log(Direction[action.direction], ...translations);
 
       return {
         grid,

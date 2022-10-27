@@ -1,6 +1,7 @@
 import "./Game.css";
 
 import { CSSProperties, useEffect, useMemo, useReducer } from "react";
+
 import { gameReducer, initGameState } from "./GameMechanics";
 import {
   AnimationState,
@@ -10,7 +11,76 @@ import {
 } from "./GameMechanics.types";
 import { GridView } from "./GridView";
 
-const defaultGameArgs: [number, number, number] = [6, 6, 0];
+export function Game({
+  rows,
+  columns,
+  obstacles,
+}: {
+  rows: number;
+  columns: number;
+  obstacles: number;
+}) {
+  const [{ grid, translations, previousGrid, animationState }, dispatch] =
+    useReducer(gameReducer, initGameState([rows, columns, obstacles]));
+
+  const transforms = useMemo(
+    () => mapTranslationsToTransforms(rows, columns, translations),
+    [rows, columns, translations]
+  );
+
+  const transitionEndHandler = () =>
+    dispatch({ type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION });
+
+  const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
+
+  useEffect(() => {
+    const keyToDirectionMap = {
+      ArrowUp: Direction.UP,
+      ArrowDown: Direction.DOWN,
+      ArrowLeft: Direction.LEFT,
+      ArrowRight: Direction.RIGHT,
+    } as const;
+
+    const keydownHandler = ({ key }: KeyboardEvent) => {
+      if (key in keyToDirectionMap) {
+        dispatch({
+          type: GameReducerActionType.MOVE,
+          direction: keyToDirectionMap[key as keyof typeof keyToDirectionMap],
+        });
+      }
+    };
+
+    document.addEventListener("keydown", keydownHandler);
+
+    return () => {
+      document.removeEventListener("keydown", keydownHandler);
+    };
+  }, []);
+
+  return (
+    <>
+      <div className="grid-container">
+        <GridView
+          grid={previousGrid}
+          transforms={transforms}
+          onTransitionEnd={transitionEndHandler}
+          key="grid"
+        />
+        {animationState === AnimationState.OVERLAYING && (
+          <GridView
+            grid={grid}
+            className={`grid-overlay`}
+            onAnimationEnd={() => {
+              dispatch({ type: GameReducerActionType.HIDE_OVERLAY });
+            }}
+            key="overlay"
+          />
+        )}
+      </div>
+      {hasWon && <div>Congratulations, you won!</div>}
+    </>
+  );
+}
 
 function mapTranslationsToTransforms(
   rows: number,
@@ -38,72 +108,3 @@ function mapTranslationsToTransforms(
       };
     });
 }
-
-function Game() {
-  const [{ grid, translations, previousGrid, animationState }, dispatch] =
-    useReducer(gameReducer, defaultGameArgs, initGameState);
-  const transforms = useMemo(
-    () =>
-      mapTranslationsToTransforms(
-        defaultGameArgs[0],
-        defaultGameArgs[1],
-        translations
-      ),
-    [translations]
-  );
-
-  useEffect(() => {
-    const keyToDirectionMap = {
-      ArrowUp: Direction.UP,
-      ArrowDown: Direction.DOWN,
-      ArrowLeft: Direction.LEFT,
-      ArrowRight: Direction.RIGHT,
-    } as const;
-
-    const keydownHandler = ({ key }: KeyboardEvent) => {
-      if (key in keyToDirectionMap) {
-        dispatch({
-          type: GameReducerActionType.MOVE,
-          direction: keyToDirectionMap[key as keyof typeof keyToDirectionMap],
-        });
-      }
-    };
-
-    document.addEventListener("keydown", keydownHandler);
-
-    return () => {
-      document.removeEventListener("keydown", keydownHandler);
-    };
-  }, []);
-
-  const transitionEndHandler = () =>
-    dispatch({ type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION });
-
-  const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
-
-  return (
-    <div className="game">
-      <div className="grid-container">
-        <GridView
-          grid={previousGrid}
-          transforms={transforms}
-          onTransitionEnd={transitionEndHandler}
-          key="grid"
-        />
-        {animationState === AnimationState.OVERLAYING && (
-          <GridView
-            grid={grid}
-            className={`grid-overlay`}
-            onAnimationEnd={() => {
-              dispatch({ type: GameReducerActionType.HIDE_OVERLAY });
-            }}
-            key="overlay"
-          />
-        )}
-      </div>
-      {hasWon && <div>Congratulations, you won!</div>}
-    </div>
-  );
-}
-
-export default Game;
