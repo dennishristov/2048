@@ -34,7 +34,7 @@ function mapTranslationsToTransforms(
 
       return {
         transform: `translate${axis}(${moveBy * 64}px)`,
-        transition: `transform 0.16s ease`,
+        transition: `transform 0.08s ease`,
       };
     });
 }
@@ -74,7 +74,7 @@ function Game() {
     return () => {
       document.removeEventListener("keydown", keydownHandler);
     };
-  }, [animationState]);
+  }, []);
 
   const transitionEndHandler = () =>
     dispatch({ type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION });

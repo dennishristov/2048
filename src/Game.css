@@ -51,7 +51,7 @@ body {
   top: 2px;
   left: 2px;
   opacity: 0;
-  animation: 0.16s ease fade-in forwards;
+  animation: 0.08s ease fade-in forwards;
 }
 
 @keyframes fade-in {
