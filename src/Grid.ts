@@ -15,7 +15,7 @@ export function createIndexGrid(rows: number, columns: number): number[][] {
     .map((_, ri) =>
       Array(columns)
         .fill(0)
-        .map((_, ci) => rows * ri + ci)
+        .map((_, ci) => columns * ri + ci)
     );
 }
 

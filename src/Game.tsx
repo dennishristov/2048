@@ -34,7 +34,7 @@ function mapTranslationsToTransforms(
 
       return {
         transform: `translate${axis}(${moveBy * 64}px)`,
-        transition: `transform ${0.2}s ease`,
+        transition: `transform 0.16s ease`,
       };
     });
 }

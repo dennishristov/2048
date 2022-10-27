@@ -76,10 +76,12 @@ export function gameReducer(
       }
 
       const newEntryI = findRandomEmptyCellIndex(moved);
+      const grid = insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
+      console.log(Direction[action.direction], ...translations);
 
       return {
+        grid,
         previousGrid: state.grid,
-        grid: insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI),
         translations,
         animationState: AnimationState.MOVING,
         completedTranslations: 0,
@@ -182,7 +184,7 @@ function moveLeft(
   const transformedIndices = transformations
     .reduce(
       transformAccumulator,
-      createIndexGrid(getRows(transformed), getColumns(transformed))
+      createIndexGrid(getRows(grid), getColumns(grid))
     )
     .flat() as number[];
 

@@ -2,22 +2,24 @@ import {
   CSSProperties,
   TransitionEventHandler,
   AnimationEventHandler,
+  memo,
 } from "react";
+import { getColumns } from "./Grid";
 import { Cell, OBSTACLE, Grid } from "./Grid.types";
 
-//https://www.learnui.design/tools/data-color-picker.html#divergent
 const colorArray = [
-  "#554994",
-  "#7d66a7",
-  "#a186bb",
-  "#c3a9d0",
-  "#e2cde6",
-  "#fff2ff",
-  "#ffe9f7",
-  "#ffe0ea",
-  "#ffd8da",
-  "#ffd1c7",
-  "#ffccb3",
+  "#2270ed",
+  "#5a54ce",
+  "#9138ae",
+  "#ad2a9e",
+  "#c81c8e",
+  "#f84492",
+  "#fe453c",
+  "#fe6823",
+  "#fd8a09",
+  "#df9e1b",
+  "#c0b12d",
+  "#82d750",
 ];
 
 function log2(value: number): number {
@@ -26,7 +28,7 @@ function log2(value: number): number {
 
 function getCellColor(cell: Cell): string {
   if (cell === OBSTACLE) {
-    return "brown";
+    return "#ACA295";
   }
 
   if (cell === 0) {
@@ -57,16 +59,16 @@ export function GridView({
     >
       {grid.map((row, ri) => (
         <div className="row" key={ri}>
-          {row.map((c, ci) => (
+          {row.map((value, ci) => (
             <span
               className="cell"
-              key={ci}
+              key={ci + ri * getColumns(grid)}
               style={{
-                backgroundColor: getCellColor(c),
-                ...transforms?.[ri * row.length + ci],
+                backgroundColor: getCellColor(value),
+                ...transforms?.[ri * getColumns(grid) + ci],
               }}
             >
-              {c || null}
+              {value !== OBSTACLE && value !== 0 && value}
             </span>
           ))}
         </div>

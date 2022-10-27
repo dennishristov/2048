@@ -1,11 +1,21 @@
+body {
+  background-color: #fffdfa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
 .game {
   display: flex;
 }
 
 .grid-container {
   position: relative;
-  background-color: gainsboro;
+  background-color: #f8f3ee;
   display: flex;
+  padding: 2px;
+  border-radius: 8px;
 }
 
 .grid {
@@ -20,24 +30,28 @@
 }
 
 .cell {
-  width: 64px;
-  height: 64px;
-  font-size: 12px;
+  width: 60px;
+  height: 60px;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: translateX(0), translateY(0);
   transition: transform 0s ease;
   will-change: transform;
+  margin: 2px;
+  border-radius: 8px;
 }
 
 .grid-overlay {
   z-index: 1;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 2px;
+  left: 2px;
   opacity: 0;
-  animation: 0.2s ease fade-in forwards;
+  animation: 0.16s ease fade-in forwards;
 }
 
 @keyframes fade-in {
