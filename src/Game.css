@@ -69,14 +69,14 @@ body {
   }
 }
 
-.config-params-button {
-  margin-bottom: 16px;
+.game-settings-button {
+  margin-top: 16px;
 }
 
-.game-params-drawer {
+.game-settings-drawer {
   width: 100%;
 }
 
-.game-params-drawer .ant-input-number {
+.game-settings-drawer .ant-input-number {
   width: 100%;
 }

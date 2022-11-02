@@ -12,22 +12,28 @@ export function App(): JSX.Element {
 
   return (
     <div className="app">
+      <Game
+        key={[rows, columns, obstacles].join(";")}
+        rows={rows}
+        columns={columns}
+        obstacles={obstacles}
+      />
       <Button
-        className="config-params-button"
+        className="game-settings-button"
         onClick={() => setOpenedConfigDrawer(true)}
       >
-        Configure Parameters
+        Game Settings
       </Button>
       <Drawer
-        title="Configure Parameters"
+        title="Game Settings"
         placement="right"
         onClose={() => setOpenedConfigDrawer(false)}
         open={openedConfigDrawer}
-        width={256}
+        width={24}
       >
-        <Space direction="vertical" className="game-params-drawer">
+        <Space direction="vertical" className="game-settings-drawer">
           <Alert
-            message="Adjusting the parameters will reset the game state."
+            message="Changing the settings will reset the game state."
             type="warning"
           />
           <LabeledNumberInput
@@ -53,12 +59,6 @@ export function App(): JSX.Element {
           />
         </Space>
       </Drawer>
-      <Game
-        key={[rows, columns, obstacles].join(";")}
-        rows={rows}
-        columns={columns}
-        obstacles={obstacles}
-      />
     </div>
   );
 }
