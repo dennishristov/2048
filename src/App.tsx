@@ -1,46 +1,74 @@
+import { Alert, Button, Drawer, Form, InputNumber, Space } from "antd";
 import { useState } from "react";
+
 import { Game } from "./Game";
-import Input from "./Input";
+import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "./sizeConstraints";
 
 export function App(): JSX.Element {
-  const [rows, setRows] = useState(6);
-  const [columns, setColumns] = useState(6);
-  const [obstacles, setObstacles] = useState(2);
+  const [openedConfigDrawer, setOpenedConfigDrawer] = useState(false);
+  const [gameParams, setGameParams] = useState({
+    rows: 6,
+    columns: 6,
+    obstacles: 2,
+  });
+  const { rows, columns, obstacles } = gameParams;
 
   return (
-    <div className="game">
-      <div className="game-params">
-        <Input
-          label="Rows"
-          type="number"
-          min={4}
-          max={10}
-          value={rows}
-          onChange={(x) => setRows(x.target.valueAsNumber)}
-        />
-        <Input
-          label="Columns"
-          type="number"
-          min={4}
-          max={10}
-          value={columns}
-          onChange={(x) => setColumns(x.target.valueAsNumber)}
-        />
-        <Input
-          label="Obstacles"
-          type="number"
-          min={0}
-          max={10}
-          value={obstacles}
-          onChange={(x) => setObstacles(x.target.valueAsNumber)}
-        />
-      </div>
-      <Game
-        key={[rows, columns, obstacles].join(";")}
-        rows={rows}
-        columns={columns}
-        obstacles={obstacles}
-      />
+    <div className="app">
+      <Game key={[rows, columns, obstacles].join(";")} {...gameParams} />
+      <Button
+        className="game-settings-button"
+        onClick={() => setOpenedConfigDrawer(true)}
+      >
+        Game Settings
+      </Button>
+      <Drawer
+        title="Game Settings"
+        placement="right"
+        onClose={() => setOpenedConfigDrawer(false)}
+        open={openedConfigDrawer}
+        width={256}
+        destroyOnClose={true}
+      >
+        <Space direction="vertical" size={16}>
+          <Alert
+            message="Changing the settings will reset the game state."
+            type="warning"
+          />
+          <Form
+            layout="vertical"
+            className="game-settings"
+            initialValues={gameParams}
+            onFinish={(x) => {
+              setGameParams(x);
+              setOpenedConfigDrawer(false);
+            }}
+          >
+            <Form.Item label="Rows" name="rows" rules={[{ required: true }]}>
+              <InputNumber min={MIN_GRID_SIZE} max={MAX_GRID_SIZE} />
+            </Form.Item>
+            <Form.Item
+              label="Columns"
+              name="columns"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={MIN_GRID_SIZE} max={MAX_GRID_SIZE} />
+            </Form.Item>
+            <Form.Item
+              label="Obstacles"
+              name="obstacles"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={0} max={4} />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Save Changes
+              </Button>
+            </Form.Item>
+          </Form>
+        </Space>
+      </Drawer>
     </div>
   );
 }

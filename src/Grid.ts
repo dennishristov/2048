@@ -1,7 +1,7 @@
 import { shuffle } from "lodash";
-import { Grid, Cell } from "./Grid.types";
+import { Grid, TileValue } from "./Grid.types";
 
-export const MIN_CELL_VALUE = 2;
+export const MIN_TILE_VALUE = 2;
 
 export function createEmptyGrid(rows: number, columns: number): number[][] {
   return Array(rows)
@@ -19,18 +19,22 @@ export function createIndexGrid(rows: number, columns: number): number[][] {
     );
 }
 
-export function findRandomEmptyCellIndex(grid: Grid): number {
+export function findRandomEmptyTileIndex(grid: Grid): number {
   const shuffledIdxPairs = shuffle(
-    grid.flat().map((cell, i): [Cell, number] => [cell, i])
+    grid.flat().map((x, i): [TileValue, number] => [x, i])
   );
-  const [, i] = shuffledIdxPairs.find(([cell]) => cell === 0) ?? [-1, -1];
+  const [, i] = shuffledIdxPairs.find(([x]) => x === 0) ?? [-1, -1];
 
   return i;
 }
 
-export function insertValueAtIndex(grid: Grid, value: Cell, i: number): Grid {
+export function insertValueAtIndex(
+  grid: Grid,
+  value: TileValue,
+  i: number
+): Grid {
   return grid.map((row, rowI) =>
-    row.map((cell, cellI) => (rowI * row.length + cellI === i ? value : cell))
+    row.map((x, columnI) => (rowI * row.length + columnI === i ? value : x))
   );
 }
 

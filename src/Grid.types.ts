@@ -1,3 +1,3 @@
 export const OBSTACLE = "OBSTACLE";
-export type Cell = number | typeof OBSTACLE;
-export type Grid = Cell[][];
+export type TileValue = number | typeof OBSTACLE;
+export type Grid = TileValue[][];

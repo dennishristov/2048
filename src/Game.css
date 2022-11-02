@@ -4,9 +4,10 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  overflow: hidden;
 }
 
-.game {
+.app {
   display: flex;
   flex-direction: column;
 }
@@ -16,7 +17,7 @@ body {
   background-color: #f8f3ee;
   display: flex;
   padding: 2px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .grid {
@@ -30,10 +31,7 @@ body {
   flex-direction: row;
 }
 
-.cell {
-  width: 60px;
-  height: 60px;
-  font-size: 16px;
+.tile {
   font-weight: 800;
   color: white;
   display: flex;
@@ -43,7 +41,7 @@ body {
   transition: transform 0s ease;
   will-change: transform;
   margin: 2px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .grid-overlay {
@@ -55,19 +53,6 @@ body {
   animation: 0.08s ease fade-in forwards;
 }
 
-.game-params {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 32px;
-}
-
-.input {
-  display: flex;
-  flex-direction: column;
-  width: 25%;
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -75,4 +60,21 @@ body {
   to {
     opacity: 1;
   }
+}
+
+.game-settings-button {
+  margin-top: 16px;
+}
+
+.game-settings .ant-input-number,
+.game-settings .ant-btn {
+  width: 100%;
+}
+
+/* 
+  yeah, these are not good, it just bugs me out
+  I assume we would have finer control over such components
+ */
+.game-settings .ant-form-item-required::before {
+  content: none !important;
 }
