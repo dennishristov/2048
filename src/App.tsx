@@ -1,23 +1,21 @@
-import { Alert, Button, Drawer, Space } from "antd";
+import { Button, Drawer, Form, InputNumber } from "antd";
 import { useState } from "react";
-import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "./sizeConstraints";
+
 import { Game } from "./Game";
-import LabeledNumberInput from "./LabeledNumberInput";
+import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "./sizeConstraints";
 
 export function App(): JSX.Element {
-  const [rows, setRows] = useState(6);
-  const [columns, setColumns] = useState(6);
-  const [obstacles, setObstacles] = useState(2);
   const [openedConfigDrawer, setOpenedConfigDrawer] = useState(false);
+  const [gameParams, setGameParams] = useState({
+    rows: 6,
+    columns: 6,
+    obstacles: 2,
+  });
+  const { rows, columns, obstacles } = gameParams;
 
   return (
     <div className="app">
-      <Game
-        key={[rows, columns, obstacles].join(";")}
-        rows={rows}
-        columns={columns}
-        obstacles={obstacles}
-      />
+      <Game key={[rows, columns, obstacles].join(";")} {...gameParams} />
       <Button
         className="game-settings-button"
         onClick={() => setOpenedConfigDrawer(true)}
@@ -29,35 +27,41 @@ export function App(): JSX.Element {
         placement="right"
         onClose={() => setOpenedConfigDrawer(false)}
         open={openedConfigDrawer}
-        width={24}
+        width={240}
+        destroyOnClose={true}
       >
-        <Space direction="vertical" className="game-settings-drawer">
-          <Alert
-            message="Changing the settings will reset the game state."
-            type="warning"
-          />
-          <LabeledNumberInput
-            label="Rows"
-            min={MIN_GRID_SIZE}
-            max={MAX_GRID_SIZE}
-            value={rows}
-            onChange={(x) => x && setRows(x)}
-          />
-          <LabeledNumberInput
+        <Form
+          layout="vertical"
+          className="game-settings"
+          initialValues={gameParams}
+          onFinish={(x) => {
+            setGameParams(x);
+            setOpenedConfigDrawer(false);
+          }}
+        >
+          <Form.Item label="Rows" name="rows" rules={[{ required: true }]}>
+            <InputNumber min={MIN_GRID_SIZE} max={MAX_GRID_SIZE} />
+          </Form.Item>
+          <Form.Item
             label="Columns"
-            min={MIN_GRID_SIZE}
-            max={MAX_GRID_SIZE}
-            value={columns}
-            onChange={(x) => x && setColumns(x)}
-          />
-          <LabeledNumberInput
+            name="columns"
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={MIN_GRID_SIZE} max={MAX_GRID_SIZE} />
+          </Form.Item>
+          <Form.Item
             label="Obstacles"
-            min={0}
-            max={7}
-            value={obstacles}
-            onChange={(x) => x && setObstacles(x)}
-          />
-        </Space>
+            name="obstacles"
+            rules={[{ required: true }]}
+          >
+            <InputNumber min={0} max={4} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Save Changes
+            </Button>
+          </Form.Item>
+        </Form>
       </Drawer>
     </div>
   );

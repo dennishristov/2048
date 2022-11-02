@@ -53,13 +53,6 @@ body {
   animation: 0.08s ease fade-in forwards;
 }
 
-.input {
-  display: flex;
-  flex-direction: column;
-  font-size: 12px;
-  font-weight: 600;
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -73,10 +66,15 @@ body {
   margin-top: 16px;
 }
 
-.game-settings-drawer {
+.game-settings .ant-input-number,
+.game-settings .ant-btn {
   width: 100%;
 }
 
-.game-settings-drawer .ant-input-number {
-  width: 100%;
+/* 
+  yeah, these are not good, it just bugs me out
+  I assume we would have finer control over such components
+ */
+.game-settings .ant-form-item-required::before {
+  content: none !important;
 }
