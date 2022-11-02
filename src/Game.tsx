@@ -1,7 +1,6 @@
 import "./Game.css";
 
-import { CSSProperties, useEffect, useMemo, useReducer } from "react";
-
+import { CSSProperties, useEffect, useMemo, useReducer, useState } from "react";
 import { gameReducer, initGameState } from "./GameMechanics";
 import {
   AnimationState,
@@ -10,6 +9,11 @@ import {
   Translation,
 } from "./GameMechanics.types";
 import { GridView } from "./GridView";
+import {
+  BIG_TILE_SIZE,
+  MAX_GRID_SIZE,
+  SMALL_TILE_SIZE,
+} from "./sizeConstraints";
 
 export function Game({
   rows,
@@ -21,11 +25,12 @@ export function Game({
   obstacles: number;
 }) {
   const [{ grid, translations, previousGrid, animationState }, dispatch] =
-    useReducer(gameReducer, initGameState([rows, columns, obstacles]));
+    useReducer(gameReducer, [rows, columns, obstacles], initGameState);
+  const tileSize = useDynamicTileSize();
 
   const transforms = useMemo(
-    () => mapTranslationsToTransforms(rows, columns, translations),
-    [rows, columns, translations]
+    () => mapTranslationsToTransforms(rows, columns, translations, tileSize),
+    [rows, columns, translations, tileSize]
   );
 
   const transitionEndHandler = () =>
@@ -65,15 +70,17 @@ export function Game({
           transforms={transforms}
           onTransitionEnd={transitionEndHandler}
           key="grid"
+          tileSize={tileSize}
         />
         {animationState === AnimationState.OVERLAYING && (
           <GridView
             grid={grid}
-            className={`grid-overlay`}
+            className="grid-overlay"
             onAnimationEnd={() => {
               dispatch({ type: GameReducerActionType.HIDE_OVERLAY });
             }}
             key="overlay"
+            tileSize={tileSize}
           />
         )}
       </div>
@@ -85,7 +92,8 @@ export function Game({
 function mapTranslationsToTransforms(
   rows: number,
   columns: number,
-  translations: Translation[]
+  translations: Translation[],
+  squareSize: number
 ): Partial<CSSProperties>[] {
   return Array(rows * columns)
     .fill(0)
@@ -103,8 +111,28 @@ function mapTranslationsToTransforms(
       const moveBy = axis === "Y" ? diff / columns : diff;
 
       return {
-        transform: `translate${axis}(${moveBy * 64}px)`,
+        transform: `translate${axis}(${moveBy * squareSize}px)`,
         transition: `transform 0.08s ease`,
       };
     });
+}
+
+function useDynamicTileSize(): number {
+  const [size, setSize] = useState(BIG_TILE_SIZE);
+
+  useEffect(() => {
+    const resizeHandler = () =>
+      setSize(
+        Math.min(window.innerHeight, window.innerWidth) >
+          MAX_GRID_SIZE * BIG_TILE_SIZE + 2 * 16
+          ? BIG_TILE_SIZE
+          : SMALL_TILE_SIZE
+      );
+    window.addEventListener("resize", resizeHandler);
+    resizeHandler();
+
+    return () => window.removeEventListener("resize", resizeHandler);
+  }, []);
+
+  return size;
 }

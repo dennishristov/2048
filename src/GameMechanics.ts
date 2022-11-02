@@ -11,13 +11,13 @@ import {
 import {
   createEmptyGrid,
   insertValueAtIndex,
-  findRandomEmptyCellIndex,
-  MIN_CELL_VALUE,
+  findRandomEmptyTileIndex,
+  MIN_TILE_VALUE,
   getColumns,
   createIndexGrid,
   getRows,
 } from "./Grid";
-import { OBSTACLE, Grid, Cell } from "./Grid.types";
+import { OBSTACLE, Grid, TileValue } from "./Grid.types";
 
 export function initGameState([rows, columns, obstacles]: [
   number,
@@ -47,12 +47,12 @@ export function initGameState([rows, columns, obstacles]: [
     .fill(0)
     .reduce(
       (result) =>
-        insertValueAtIndex(result, OBSTACLE, findRandomEmptyCellIndex(result)),
+        insertValueAtIndex(result, OBSTACLE, findRandomEmptyTileIndex(result)),
       empty
     );
-  const starter = findRandomEmptyCellIndex(withObstacles);
+  const starter = findRandomEmptyTileIndex(withObstacles);
 
-  const grid = insertValueAtIndex(withObstacles, MIN_CELL_VALUE, starter);
+  const grid = insertValueAtIndex(withObstacles, MIN_TILE_VALUE, starter);
 
   return {
     grid,
@@ -75,8 +75,8 @@ export function gameReducer(
         return state;
       }
 
-      const newEntryI = findRandomEmptyCellIndex(moved);
-      const grid = insertValueAtIndex(moved, MIN_CELL_VALUE, newEntryI);
+      const newEntryI = findRandomEmptyTileIndex(moved);
+      const grid = insertValueAtIndex(moved, MIN_TILE_VALUE, newEntryI);
 
       return {
         grid,
@@ -142,31 +142,31 @@ function moveLeft(
 
       // Move next positive value to the left most side of the row
       if (mutableRow[i] === 0) {
-        const nextPopulatedCellI = findNextPopulatedCellIndex(mutableRow, i);
-        if (nextPopulatedCellI === -1) {
+        const nextPopulatedTileI = findNextPopulatedTileIndex(mutableRow, i);
+        if (nextPopulatedTileI === -1) {
           continue;
         }
 
-        mutableRow[i] = mutableRow[nextPopulatedCellI];
-        mutableRow[nextPopulatedCellI] = 0;
+        mutableRow[i] = mutableRow[nextPopulatedTileI];
+        mutableRow[nextPopulatedTileI] = 0;
 
-        const from = nextPopulatedCellI + rowI * columns;
+        const from = nextPopulatedTileI + rowI * columns;
         const to = i + rowI * columns;
         translations.push([from, to]);
       }
 
-      const nextPopulatedCellI = findNextPopulatedCellIndex(mutableRow, i);
-      if (nextPopulatedCellI === -1) {
+      const nextPopulatedTileI = findNextPopulatedTileIndex(mutableRow, i);
+      if (nextPopulatedTileI === -1) {
         continue;
       }
 
-      // Sum if there is the a cell with the same value ahead
-      if (mutableRow[i] === mutableRow[nextPopulatedCellI]) {
+      // Sum if there is the a tile with the same value ahead
+      if (mutableRow[i] === mutableRow[nextPopulatedTileI]) {
         //@ts-ignore, we checked for an obstacle already
         mutableRow[i] *= 2;
-        mutableRow[nextPopulatedCellI] = 0;
+        mutableRow[nextPopulatedTileI] = 0;
 
-        const from = nextPopulatedCellI + rowI * columns;
+        const from = nextPopulatedTileI + rowI * columns;
         const to = i + rowI * columns;
         translations.push([from, to]);
       }
@@ -197,7 +197,7 @@ function moveLeft(
   return [normalizedGrid, normalizedTranslations];
 }
 
-function findNextPopulatedCellIndex(row: Cell[], start: number): number {
+function findNextPopulatedTileIndex(row: TileValue[], start: number): number {
   const nextObstacleIndex = row
     .slice(start + 1, row.length)
     .findIndex((x) => x === OBSTACLE);
@@ -205,15 +205,15 @@ function findNextPopulatedCellIndex(row: Cell[], start: number): number {
   const boundaryIndex =
     nextObstacleIndex === -1 ? row.length : start + 1 + nextObstacleIndex;
 
-  const nextPopulatedCellI = row
+  const nextPopulatedTileI = row
     .slice(start + 1, boundaryIndex)
     .findIndex((x) => x > 0);
 
-  if (nextPopulatedCellI === -1) {
+  if (nextPopulatedTileI === -1) {
     return -1;
   }
 
-  return start + 1 + nextPopulatedCellI;
+  return start + 1 + nextPopulatedTileI;
 }
 
 function identity<T>(grid: T[][]): T[][] {

@@ -2,12 +2,15 @@ import {
   CSSProperties,
   TransitionEventHandler,
   AnimationEventHandler,
-  memo,
 } from "react";
 import { getColumns } from "./Grid";
-import { Cell, OBSTACLE, Grid } from "./Grid.types";
+import { TileValue, OBSTACLE, Grid } from "./Grid.types";
 
-const colorArray = [
+function log2(value: number): number {
+  return Math.log(value) / Math.log(2);
+}
+
+const TILE_COLOR_ARRAY = [
   "#2270ed",
   "#5a54ce",
   "#9138ae",
@@ -22,11 +25,7 @@ const colorArray = [
   "#82d750",
 ];
 
-function log2(value: number): number {
-  return Math.log(value) / Math.log(2);
-}
-
-function getCellColor(cell: Cell): string {
+function getTileColor(cell: TileValue): string {
   if (cell === OBSTACLE) {
     return "#ACA295";
   }
@@ -35,17 +34,21 @@ function getCellColor(cell: Cell): string {
     return "transparent";
   }
 
-  return colorArray[log2(cell) - 1];
+  return TILE_COLOR_ARRAY[log2(cell) - 1];
 }
+
+const SQUARE_MARGIN = 2;
 
 export function GridView({
   grid,
+  tileSize,
   transforms,
   className = "",
   onTransitionEnd,
   onAnimationEnd,
 }: {
   className?: string;
+  tileSize: number;
   grid: Grid;
   transforms?: Partial<CSSProperties>[];
   onTransitionEnd?: TransitionEventHandler;
@@ -61,10 +64,13 @@ export function GridView({
         <div className="row" key={ri}>
           {row.map((value, ci) => (
             <span
-              className="cell"
+              className="tile"
               key={ci + ri * getColumns(grid)}
               style={{
-                backgroundColor: getCellColor(value),
+                width: tileSize - 2 * SQUARE_MARGIN,
+                height: tileSize - 2 * SQUARE_MARGIN,
+                backgroundColor: getTileColor(value),
+                fontSize: 8 + tileSize / 8,
                 ...transforms?.[ri * getColumns(grid) + ci],
               }}
             >
