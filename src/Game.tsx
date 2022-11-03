@@ -1,7 +1,12 @@
 import "./Game.css";
 
 import { CSSProperties, useEffect, useMemo, useReducer, useState } from "react";
-import { gameReducer, initGameState } from "./GameMechanics";
+import {
+  gameReducer,
+  hasMetWinCondition,
+  hasNoAvailableMoves,
+  initGameState,
+} from "./GameMechanics";
 import {
   AnimationState,
   Direction,
@@ -36,7 +41,8 @@ export function Game({
   const transitionEndHandler = () =>
     dispatch({ type: GameReducerActionType.INCREMENT_COMPLETED_TRANSITION });
 
-  const hasWon = useMemo(() => grid.flat().includes(2048), [grid]);
+  const hasWon = useMemo(() => hasMetWinCondition(grid), [grid]);
+  const hasLost = useMemo(() => hasNoAvailableMoves(grid), [grid]);
 
   useEffect(() => {
     const keyToDirectionMap = {
@@ -83,8 +89,14 @@ export function Game({
             tileSize={tileSize}
           />
         )}
+        {hasWon && (
+          <div className="game-result-message">
+            Congratulations, you won!
+            <div className="emojis">🎉🎊🍾</div>
+          </div>
+        )}
+        {hasLost && <div className="game-result-message">Game over.</div>}
       </div>
-      {hasWon && <div>Congratulations, you won!</div>}
     </>
   );
 }

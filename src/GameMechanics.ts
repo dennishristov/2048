@@ -111,6 +111,18 @@ export function gameReducer(
   }
 }
 
+export function hasNoAvailableMoves(grid: Grid): boolean {
+  return [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN].every(
+    (x) => isEqual(grid, move(grid, x)[0])
+  );
+}
+
+export const WIN_CONDITION_TILE_VALUE = 2048;
+
+export function hasMetWinCondition(grid: Grid): boolean {
+  return grid.flat().includes(WIN_CONDITION_TILE_VALUE);
+}
+
 function move(grid: Grid, direction: Direction): [Grid, Translation[]] {
   switch (direction) {
     case Direction.LEFT:

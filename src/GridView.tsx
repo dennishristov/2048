@@ -27,7 +27,7 @@ const TILE_COLOR_ARRAY = [
 
 function getTileColor(cell: TileValue): string {
   if (cell === OBSTACLE) {
-    return "#ACA295";
+    return "#aca295";
   }
 
   if (cell === 0) {

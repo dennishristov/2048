@@ -20,10 +20,10 @@ export function App(): JSX.Element {
         className="game-settings-button"
         onClick={() => setOpenedConfigDrawer(true)}
       >
-        Game Settings
+        Settings
       </Button>
       <Drawer
-        title="Game Settings"
+        title="Settings"
         placement="right"
         onClose={() => setOpenedConfigDrawer(false)}
         open={openedConfigDrawer}
