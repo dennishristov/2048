@@ -72,6 +72,7 @@ export function Game({
     <>
       <div className="grid-container">
         <GridView
+          data-testid="game"
           grid={previousGrid}
           transforms={transforms}
           onTransitionEnd={transitionEndHandler}

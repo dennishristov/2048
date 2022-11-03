@@ -46,6 +46,7 @@ export function GridView({
   className = "",
   onTransitionEnd,
   onAnimationEnd,
+  ...rest
 }: {
   className?: string;
   tileSize: number;
@@ -59,12 +60,14 @@ export function GridView({
       className={`grid ${className}`}
       onTransitionEnd={onTransitionEnd}
       onAnimationEnd={onAnimationEnd}
+      {...rest}
     >
       {grid.map((row, ri) => (
         <div className="row" key={ri}>
           {row.map((value, ci) => (
             <span
               className="tile"
+              data-testid="tile"
               key={ci + ri * getColumns(grid)}
               style={{
                 width: tileSize - 2 * SQUARE_MARGIN,
