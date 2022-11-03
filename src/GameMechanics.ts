@@ -88,6 +88,7 @@ export function gameReducer(
 
     case GameReducerActionType.INCREMENT_COMPLETED_TRANSITION:
       if (state.completedTranslations + 1 === state.translations.length) {
+        //all transitions are done, proceed with the overlay step
         return {
           ...state,
           completedTranslations: 0,
