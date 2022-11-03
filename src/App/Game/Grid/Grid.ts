@@ -1,8 +1,6 @@
 import { shuffle } from "lodash";
 import { Grid, TileValue } from "./Grid.types";
 
-export const MIN_TILE_VALUE = 2;
-
 export function createEmptyGrid(rows: number, columns: number): number[][] {
   return Array(rows)
     .fill(0)

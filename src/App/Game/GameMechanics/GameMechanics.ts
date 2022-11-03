@@ -12,12 +12,13 @@ import {
   createEmptyGrid,
   insertValueAtIndex,
   findRandomEmptyTileIndex,
-  MIN_TILE_VALUE,
   getColumns,
   createIndexGrid,
   getRows,
 } from "../Grid/Grid";
 import { OBSTACLE, Grid, TileValue } from "../Grid/Grid.types";
+
+export const MIN_TILE_VALUE = 2;
 
 export function initGameState([rows, columns, obstacles]: [
   number,
