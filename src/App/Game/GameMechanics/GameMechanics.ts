@@ -16,8 +16,8 @@ import {
   getColumns,
   createIndexGrid,
   getRows,
-} from "./Grid";
-import { OBSTACLE, Grid, TileValue } from "./Grid.types";
+} from "../Grid/Grid";
+import { OBSTACLE, Grid, TileValue } from "../Grid/Grid.types";
 
 export function initGameState([rows, columns, obstacles]: [
   number,
@@ -88,6 +88,7 @@ export function gameReducer(
 
     case GameReducerActionType.INCREMENT_COMPLETED_TRANSITION:
       if (state.completedTranslations + 1 === state.translations.length) {
+        //all transitions are done, proceed with the overlay step
         return {
           ...state,
           completedTranslations: 0,
@@ -109,6 +110,18 @@ export function gameReducer(
         animationState: AnimationState.SETTLED,
       };
   }
+}
+
+export function hasNoAvailableMoves(grid: Grid): boolean {
+  return [Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN].every(
+    (x) => isEqual(grid, move(grid, x)[0])
+  );
+}
+
+export const WIN_CONDITION_TILE_VALUE = 2048;
+
+export function hasMetWinCondition(grid: Grid): boolean {
+  return grid.flat().includes(WIN_CONDITION_TILE_VALUE);
 }
 
 function move(grid: Grid, direction: Direction): [Grid, Translation[]] {

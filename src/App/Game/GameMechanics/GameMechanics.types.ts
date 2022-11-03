@@ -1,4 +1,4 @@
-import { Grid } from "./Grid.types";
+import { Grid } from "../Grid/Grid.types";
 
 export enum Direction {
   UP,

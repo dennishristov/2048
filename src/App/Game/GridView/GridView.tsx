@@ -1,10 +1,12 @@
+import "./GridView.css";
+
 import {
   CSSProperties,
   TransitionEventHandler,
   AnimationEventHandler,
 } from "react";
-import { getColumns } from "./Grid";
-import { TileValue, OBSTACLE, Grid } from "./Grid.types";
+import { getColumns } from "../Grid/Grid";
+import { TileValue, OBSTACLE, Grid } from "../Grid/Grid.types";
 
 function log2(value: number): number {
   return Math.log(value) / Math.log(2);
@@ -27,7 +29,7 @@ const TILE_COLOR_ARRAY = [
 
 function getTileColor(cell: TileValue): string {
   if (cell === OBSTACLE) {
-    return "#ACA295";
+    return "#aca295";
   }
 
   if (cell === 0) {
@@ -46,6 +48,7 @@ export function GridView({
   className = "",
   onTransitionEnd,
   onAnimationEnd,
+  ...rest
 }: {
   className?: string;
   tileSize: number;
@@ -59,12 +62,14 @@ export function GridView({
       className={`grid ${className}`}
       onTransitionEnd={onTransitionEnd}
       onAnimationEnd={onAnimationEnd}
+      {...rest}
     >
       {grid.map((row, ri) => (
         <div className="row" key={ri}>
           {row.map((value, ci) => (
             <span
               className="tile"
+              data-testid="tile"
               key={ci + ri * getColumns(grid)}
               style={{
                 width: tileSize - 2 * SQUARE_MARGIN,
