@@ -1,10 +1,12 @@
+import "./GridView.css";
+
 import {
   CSSProperties,
   TransitionEventHandler,
   AnimationEventHandler,
 } from "react";
-import { getColumns } from "./Grid";
-import { TileValue, OBSTACLE, Grid } from "./Grid.types";
+import { getColumns } from "../Grid/Grid";
+import { TileValue, OBSTACLE, Grid } from "../Grid/Grid.types";
 
 function log2(value: number): number {
   return Math.log(value) / Math.log(2);

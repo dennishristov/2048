@@ -4,8 +4,8 @@ import {
   GameReducerActionType,
   Translation,
 } from "./GameMechanics.types";
-import * as GridUtils from "./Grid";
-import { Grid } from "./Grid.types";
+import * as GridUtils from "../Grid/Grid";
+import { Grid } from "../Grid/Grid.types";
 
 describe("moving", () => {
   beforeEach(() => {

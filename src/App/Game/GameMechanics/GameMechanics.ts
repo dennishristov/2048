@@ -16,8 +16,8 @@ import {
   getColumns,
   createIndexGrid,
   getRows,
-} from "./Grid";
-import { OBSTACLE, Grid, TileValue } from "./Grid.types";
+} from "../Grid/Grid";
+import { OBSTACLE, Grid, TileValue } from "../Grid/Grid.types";
 
 export function initGameState([rows, columns, obstacles]: [
   number,

@@ -6,19 +6,19 @@ import {
   hasMetWinCondition,
   hasNoAvailableMoves,
   initGameState,
-} from "./GameMechanics";
+} from "./GameMechanics/GameMechanics";
 import {
   AnimationState,
   Direction,
   GameReducerActionType,
   Translation,
-} from "./GameMechanics.types";
-import { GridView } from "./GridView";
+} from "./GameMechanics/GameMechanics.types";
+import { GridView } from "./GridView/GridView";
 import {
   BIG_TILE_SIZE,
   MAX_GRID_SIZE,
   SMALL_TILE_SIZE,
-} from "./sizeConstraints";
+} from "../sizeConstraints";
 
 export function Game({
   rows,

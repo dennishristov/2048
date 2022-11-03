@@ -1,0 +1,51 @@
+.game-settings-button {
+  margin-top: 16px;
+}
+
+.game-settings .ant-input-number,
+.game-settings .ant-btn {
+  width: 100%;
+}
+
+/* 
+  yeah, these are not good, it just bugs me out
+  I assume we would have finer control over such components
+ */
+.game-settings .ant-form-item-required::before {
+  content: none !important;
+}
+
+.game-result-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  background-color: #f8f3eeee;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  animation: fade-in-out 4s ease forwards;
+}
+
+.emojis {
+  font-size: 32px;
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

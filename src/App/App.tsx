@@ -1,8 +1,10 @@
 import { Alert, Button, Drawer, Form, InputNumber, Space } from "antd";
 import { useState } from "react";
 
-import { Game } from "./Game";
+import { Game } from "./Game/Game";
 import { MAX_GRID_SIZE, MIN_GRID_SIZE } from "./sizeConstraints";
+
+import "./App.css";
 
 export function App(): JSX.Element {
   const [openedConfigDrawer, setOpenedConfigDrawer] = useState(false);
@@ -14,7 +16,7 @@ export function App(): JSX.Element {
   const { rows, columns, obstacles } = gameParams;
 
   return (
-    <div className="app">
+    <>
       <Game key={[rows, columns, obstacles].join(";")} {...gameParams} />
       <Button
         className="game-settings-button"
@@ -69,6 +71,6 @@ export function App(): JSX.Element {
           </Form>
         </Space>
       </Drawer>
-    </div>
+    </>
   );
 }

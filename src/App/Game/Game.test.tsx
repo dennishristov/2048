@@ -6,9 +6,9 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { Game } from "./Game";
-import * as GameMechanics from "./GameMechanics";
-import { AnimationState } from "./GameMechanics.types";
-import { Grid } from "./Grid.types";
+import * as GameMechanics from "./GameMechanics/GameMechanics";
+import { AnimationState } from "./GameMechanics/GameMechanics.types";
+import { Grid } from "./Grid/Grid.types";
 
 const grid = [
   [2048, 0, 0, 0],

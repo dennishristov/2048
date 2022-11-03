@@ -1,0 +1,32 @@
+.grid {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.tile {
+  font-weight: 800;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(0), translateY(0);
+  transition: transform 0s ease;
+  will-change: transform;
+  margin: 2px;
+  border-radius: 4px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

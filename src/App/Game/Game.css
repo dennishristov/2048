@@ -1,0 +1,16 @@
+.grid-container {
+  position: relative;
+  background-color: #f8f3ee;
+  display: flex;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.grid-overlay {
+  z-index: 1;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  opacity: 0;
+  animation: 0.08s ease fade-in forwards;
+}
